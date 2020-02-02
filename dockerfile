@@ -1,12 +1,7 @@
-FROM mhart/alpine-node:10 AS builder
+FROM node:alpine
 WORKDIR /app
-COPY package.json .
+EXPOSE 3000
+COPY . .
 
 RUN yarn install
-COPY . .
 CMD ["yarn","start"]
-
-
-
-
-# CMD ["serve", "-p", "80", "-s", "."]

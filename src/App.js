@@ -125,6 +125,11 @@ class App extends Component {
     this.setState({search, sortedUsers: this.getFilteredData()})
   )
 
+  addUserHide = (e) => {
+    e.preventDefault()
+    this.setState({addUserVisible: false})
+}
+
   pageChangeHandler = ({selected}) => this.setState({currentPage: selected})
 
 
@@ -155,7 +160,7 @@ class App extends Component {
       addUser = <button className="button is-rounded" 
       onClick={() => this.setState({addUserVisible: true})}>+ Добавить</button>;
       } else {
-      addUser = <div className="section is-flex"><AddUser addUser={this.addUser}/></div>
+      addUser = <div className="section is-flex"><AddUser addUser={this.addUser} cancelHandler={this.addUserHide}/></div>
     }
     
 

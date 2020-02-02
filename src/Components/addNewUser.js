@@ -34,21 +34,18 @@ import '../App.sass'
 			    zip: ''
             }
         }
-        this.props.addUser(usr)
-        
+        this.props.addUser(usr) 
       };
 
-      handleChange = (e) => {
+      handleChange = () => {
         if( !this.id.current.value ||
             !this.phone.current.value || 
             !this.fName.current.value || 
             !this.sName.current.value ||
             !this.email.current.value) {
             this.setState({showButton: false})
-            console.log('NOT')
         } else {
             this.setState({showButton: true})
-            console.log('SHOW')
         }
         
     }
@@ -61,7 +58,7 @@ import '../App.sass'
                 <fieldset className="field">
                     <label className="label"> ID:
                         <input className="input is-primary" 
-                        onChange={(e)=> this.handleChange(e)}
+                        onChange={(e)=> this.handleChange()}
                         ref={this.id} 
                         placeholder='ID'
                         >
@@ -69,7 +66,7 @@ import '../App.sass'
                     </label>
                     <label className="label">First Name
                         <input className="input is-primary" 
-                        onChange={(e)=> this.handleChange(e)}
+                        onChange={(e)=> this.handleChange()}
                        ref={this.fName} 
                         placeholder='First Name'
                         >
@@ -77,7 +74,7 @@ import '../App.sass'
                     </label>
                     <label className="label">Last Name
                         <input className="input is-primary" 
-                        onChange={(e)=> this.handleChange(e)}
+                        onChange={(e)=> this.handleChange()}
                         ref={this.sName} 
                         placeholder='Last Name'
                        >
@@ -85,7 +82,7 @@ import '../App.sass'
                     </label>
                     <label className="label">Email
                         <input className="input is-primary" 
-                        onChange={(e)=> this.handleChange(e)}
+                        onChange={(e)=> this.handleChange()}
                         ref={this.email} 
                         type='email'
                         placeholder='Email'
@@ -101,8 +98,10 @@ import '../App.sass'
                         </input>
                     </label>
                 </fieldset>
-                {this.state.showButton && 
-                <button className='button is-primary' onClick={this.submitHandler}>Submit</button>}
+                <div className="is-grouped">
+                <button className="button" onClick={this.submitHandler} disabled={!this.state.showButton} >Добавить</button>
+                <button className="button" onClick={this.props.cancelHandler}>Отмена</button>
+                </div>
             </form>
         </Fragment>
     )
