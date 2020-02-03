@@ -15,12 +15,17 @@ class App extends Component {
     super(props);
     this.state = {
       users: [],
+      sortedUsers: [],
       addUserVisible: false,
       isLoading: false,
       error: null,
       welcomeScreen: true,
       sorted: {
         id: false,
+        firstName: false,
+        lastName: false,
+        phone: false,
+        email: false
       },
       search:'',
       currentPage: 0,
@@ -45,7 +50,7 @@ class App extends Component {
     }
 
   sortByNumber = (param) => {
-    let cloneUsers = this.state.users
+    let cloneUsers = this.state.users.slice()
 
     if(this.state.sorted[param]) {
       this.setState(prevState => ({
@@ -61,8 +66,8 @@ class App extends Component {
   }
 
   sortByString = (param) => {
-    let cloneUsers = this.state.users
-   
+    let cloneUsers = this.state.users.slice()
+  
     
     if(this.state.sorted[param]) {
       this.setState(prevState => ({
@@ -173,7 +178,7 @@ class App extends Component {
     }
 
     const maxUsers = 50;
-    const displayData = _.chunk(sortedUsers, maxUsers)[this.state.currentPage]
+    const displayData = _.chunk(this.state.sortedUsers, maxUsers)[this.state.currentPage]
 
     return (
       <div className="App content">
