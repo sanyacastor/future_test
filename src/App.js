@@ -26,6 +26,7 @@ function App() {
   const [totalPages, setTotalPages] = useState(1)
   
   const loadData = (url) => {
+    setError(null)
     setLoading(true)
     setWelcomeScreen(false)
 
@@ -40,10 +41,10 @@ function App() {
         .then(data => { setUsers(data)
                         setLoading(false)
           }) 
-        .catch(error => {setError(error)
-        console.log(error)
+        .catch(error => {setError('Ошибка загрузки данных')
                         setLoading(false)
-                        openNotificationWithIcon('error', error.message)});
+                        setWelcomeScreen(true)
+                        });
     }
     
   const usersPerPage = 50
@@ -63,6 +64,12 @@ function App() {
 
     setSearchResult(displayUsers);
   }, [IndexOfFirstUsers, currentPage, indexOfLastUsers, search, searchResult.length, users]);
+
+  useEffect(()=>{
+    if(error){
+      openNotificationWithIcon('error', error)
+    }
+  },[error])
 
 
   const userClickHandler = (id) => {
@@ -92,9 +99,7 @@ function App() {
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber)
   } 
-
-
-
+  
   return (
     <div className="App">
       <Layout>

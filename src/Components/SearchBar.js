@@ -11,6 +11,7 @@ function SearchBar({onSearch}) {
         <Fragment>
             <Search
                 style={{ marginTop: '1rem' }}
+                value={value}
                 placeholder="Введите имя фамилию или email"
                 enterButton="Поиск"
                 size="default"
