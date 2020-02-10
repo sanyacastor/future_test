@@ -1,5 +1,5 @@
-import React, { Fragment } from 'react';
-import '../App.sass'
+import React from 'react';
+import { Row, Col, Button, Card } from 'antd';
 
 function  welcomeScreen(props) {
 
@@ -7,19 +7,14 @@ function  welcomeScreen(props) {
     const API_big = 'http://www.filltext.com/?rows=1000&id={number|1000}&firstName={firstName}&delay=3&lastName={lastName}&email={email}&phone={phone|(xxx)xxx-xx-xx}&address={addressObject}&description={lorem|32}'
 
     return (
-        <Fragment>
-         <div className="App content">
-                <div className="container">
-                  <div className="column is-10 is-offset-1">
-                  <div className="section">
-                      <h2 className="title">Солько пользователй загрузить?</h2>
-                    <button className="button" onClick={()=> props.onClick(API_small)}>50</button>
-                    <button className="button" onClick={()=> props.onClick(API_big)}>1000</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-        </Fragment>
+            <Card title="Сколько пользователй загрузить?">
+              <Row type="flex" justify="center">
+                <Col span={6}>
+                      <Button onClick={()=> props.onClick(API_small)}>50</Button>
+                      <Button onClick={()=> props.onClick(API_big)}>1000</Button>
+                </Col>
+              </Row>
+            </Card>
     )  
 }
 

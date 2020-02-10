@@ -1,41 +1,33 @@
-import React,  { Component } from 'react';
-import Users from './Components/Users';
-import User from './Components/User';
+import React,  { useState, useEffect } from 'react';
+import UserList from './Components/UserList';
+import ActiveUser from './Components/ActiveUser';
 import SearchBar from './Components/SearchBar';
-import AddUser from "./Components/addNewUser";
+import AddUser from "./Components/AddUser";
 import WelcomeSceen from "./Components/WelcomeScreen";
-import Loader from "./Components/loader";
-import ReactPaginate from "react-paginate"
-import _ from "lodash"
+import Pagination from "./Components/Pagination";
+import Loader from "./Components/Loader";
 
-import './App.sass'
+import './App.css'
+import 'antd/dist/antd.css';
+import { Layout, Menu, notification } from 'antd';
+const { Header, Content, Footer } = Layout;
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      users: [],
-      sortedUsers: [],
-      addUserVisible: false,
-      isLoading: false,
-      error: null,
-      welcomeScreen: true,
-      sorted: {
-        id: false,
-        firstName: false,
-        lastName: false,
-        phone: false,
-        email: false
-      },
-      search:'',
-      currentPage: 0,
-      currentUser: {}
-    };
 
-  }
+function App() {
 
-  loadData = (url) => {
-    this.setState({ isLoading: true, welcomeScreen: false});
+  const [users, setUsers] = useState([])
+  const [search, setSearch] = useState('')
+  const [searchResult, setSearchResult] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [welcomeScreen, setWelcomeScreen] = useState(true)
+  const [error, setError] = useState(null);
+  const [currentUser, setCurrentUser] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1)
+  
+  const loadData = (url) => {
+    setLoading(true)
+    setWelcomeScreen(false)
 
     fetch(url)
     .then(response => {
@@ -45,191 +37,103 @@ class App extends Component {
                 throw new Error ('Что-то пошло не так');
             }
         })
-        .then(data => this.setState({users: data, sortedUsers: data, isLoading: false, welcomeScreen: false}))
-        .catch(error => this.setState({error: error, isLoading: false}));
+        .then(data => { setUsers(data)
+                        setLoading(false)
+          }) 
+        .catch(error => {setError(error)
+        console.log(error)
+                        setLoading(false)
+                        openNotificationWithIcon('error', error.message)});
     }
-
-  sortByNumber = (param) => {
-    let cloneUsers = this.state.users.slice()
-
-    if(this.state.sorted[param]) {
-      this.setState(prevState => ({
-        sortedUsers: cloneUsers.sort((a,b) => b[param] - a[param]),
-        sorted: {...prevState.sorted, [param]: !this.state.sorted[param]}
-        }))
-    } else {
-      this.setState(prevState => ({
-        sortedUsers: cloneUsers.sort((a,b) => a[param] - b[param]),
-        sorted: {...prevState.sorted, [param]: !this.state.sorted[param]}
-        }))
-    }
-  }
-
-  sortByString = (param) => {
-    let cloneUsers = this.state.users.slice()
-  
     
-    if(this.state.sorted[param]) {
-      this.setState(prevState => ({
-        sortedUsers: cloneUsers.sort(function(a, b){
-          let nameA = a[param].toLowerCase()
-          let nameB = b[param].toLowerCase()
+  const usersPerPage = 50
+  const indexOfLastUsers = currentPage * usersPerPage
+  const IndexOfFirstUsers = indexOfLastUsers - usersPerPage
 
-          if (nameA < nameB)
-            return -1
-          if (nameA > nameB)
-            return 1
-          return 0
-        }),
-        sorted: {...prevState.sorted, [param]: !this.state.sorted[param]}
-        }))
-    } else {
-      this.setState(prevState => ({
-          
-        sortedUsers: cloneUsers.sort(function(a, b){
-          let nameA = a[param].toLowerCase()
-          let nameB = b[param].toLowerCase()
-          
-          if (nameB < nameA)
-            return -1
-          if (nameB > nameA)
-            return 1
-          return 0
-        }),
-        sorted: {...prevState.sorted, [param]: !this.state.sorted[param]}
-        }))
-      }
-    }
-
-  getFilteredData(){
-    const {users, search} = this.state
-
-    if (!search) {
-      return users
-    }
-
-    var result = users.filter(item => {
+  useEffect(() => {
+  
+    const result = users.concat().filter(item => {
       return item['firstName'].toLowerCase().includes(search.toLowerCase())
-        || item['lastName'].toLowerCase().includes(search.toLowerCase())
-        || item['email'].toLowerCase().includes(search.toLowerCase()) 
-    })
-      return result
-  }
+          || item['lastName'].toLowerCase().includes(search.toLowerCase())
+          || item['email'].toLowerCase().includes(search.toLowerCase()) 
+      })
 
-  userClickHandler = (id) => {
-    this.state.sortedUsers.forEach(el => {
+    setTotalPages(Math.floor(result.length/usersPerPage))
+    const displayUsers =  result.slice(IndexOfFirstUsers, indexOfLastUsers)
+
+    setSearchResult(displayUsers);
+  }, [IndexOfFirstUsers, currentPage, indexOfLastUsers, search, searchResult.length, users]);
+
+
+  const userClickHandler = (id) => {
+    users.forEach(el => {
       if(parseInt(el.id) === parseInt(id)) {
-        this.setState({
-          currentUser: el
-        })
+        setCurrentUser(el)
       }
     });
   }
 
-  searchHandler = search =>(
-    this.setState({search, sortedUsers: this.getFilteredData()})
-  )
-
-  addUserHide = (e) => {
-    e.preventDefault()
-    this.setState({addUserVisible: false})
-}
-
-  pageChangeHandler = ({selected}) => this.setState({currentPage: selected})
-
-
-  addUser = (user) => {
-    this.setState(prevState =>({
-      users: [user, ...prevState.users],
-      sortedUsers: [user, ...prevState.users],
-      addUserVisible: false,
-    }))
+  const searchHandler = search => {
+    setSearch(search)
+    setCurrentPage(1)
   }
 
-  isEmptyObj = (obj) => JSON.stringify(obj) === "{}"
-
-
-  render() {
-    let userCard;
-    let addUser;
-
-    const sortedUsers = this.getFilteredData()
-
-    if (this.isEmptyObj(this.state.currentUser)) {
-      userCard = <p>Пользователь не выбран</p>;
-    } else {
-      userCard = <User data={this.state.currentUser}/>;
-    }
-    
-    if(!this.state.addUserVisible){
-      addUser = <button className="button is-rounded" 
-      onClick={() => this.setState({addUserVisible: true})}>+ Добавить</button>;
-      } else {
-      addUser = <div className="section is-flex"><AddUser addUser={this.addUser} cancelHandler={this.addUserHide}/></div>
-    }
-    
-
-    if(this.state.welcomeScreen) {
-      return <WelcomeSceen onClick={this.loadData}/>
-    }
-
-    if(this.state.isLoading) {
-      return <Loader/>
-    }
-
-    const maxUsers = 50;
-    const displayData = _.chunk(this.state.sortedUsers, maxUsers)[this.state.currentPage]
-
-    return (
-      <div className="App content">
-        <div className="container">
-          <div className="column is-10 is-offset-1">
-            
-            <div className="section">
-              <h1 className="title">Тестовое задание</h1>
-              <div className="is-8 is-flex">
-                  <SearchBar onSearch = {this.searchHandler}/>
-              </div>
-            </div>
-            {addUser} 
-            <div className="section">
-              <Users className="is-block"
-              data = {displayData}
-              sortedFlags = {this.state.sorted}
-              sortByNumber={this.sortByNumber}
-              sortByString={this.sortByString}
-              clickHandler={this.userClickHandler}/>
-
-              { this.state.users.length > maxUsers 
-              ? <ReactPaginate
-                previousLabel={'previous'}
-                nextLabel={'next'}
-                breakLabel={'...'}
-                breakClassName={'break-me'}
-                pageCount={this.displayData}
-                marginPagesDisplayed={3}
-                pageRangeDisplayed={1}
-                onPageChange={this.pageChangeHandler}
-                forcePage={this.state.currentPage}
-
-                containerClassName='pagination'
-                pageLinkClassName='pagination-link'
-                activeLinkClassName='is-current is-primary'
-                previousLinkClassName='pagination-previous'
-                nextLinkClassName='pagination-next'
-              /> : null
-              }
-
-              <div className="section">
-                {userCard}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const addUser = (user) => {
+    setUsers([user, ...users])
+    openNotificationWithIcon('success',`${user.firstName} добавлен`)
   }
+
+  const openNotificationWithIcon = (type, text) => {
+        notification[type]({
+            message: text,
+        });
+    };
+  
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber)
+  } 
+
+
+
+  return (
+    <div className="App">
+      <Layout>
+      {welcomeScreen ? 
+        <WelcomeSceen onClick={loadData}/>
+        :<React.Fragment>
+          <Header style={{ position: 'fixed', zIndex: 1, width: '100%' }}>
+            <Menu
+              theme="dark"
+              mode="horizontal"
+              defaultSelectedKeys={['2']}
+              style={{ lineHeight: '64px' }}
+            >
+            <SearchBar onSearch = {searchHandler}/>
+            </Menu>
+          </Header>
+          <Content style={{ padding: '0 50px', marginTop: 64 }}>
+          <AddUser addUser={addUser}/>
+            { loading ?
+            <Loader/>
+            :<UserList
+            data = {searchResult}
+            clickHandler={userClickHandler}/>
+            }
+            { searchResult.length >= usersPerPage ?
+            <Pagination 
+            total={totalPages}
+            paginate={paginate}
+            currentPage={currentPage}/>
+            : null
+            }
+            <ActiveUser user={currentUser}/>
+          </Content>
+        <Footer style={{ textAlign: 'center' }}>Created by Sanya</Footer>
+          </React.Fragment>
+      }
+      </Layout>
+    </div>
+  );
 }
 
 export default App;

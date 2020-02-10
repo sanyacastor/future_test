@@ -1,28 +1,24 @@
 import React, { Fragment, useState } from 'react';
-import '../App.sass'
+import { Input } from 'antd'
+const { Search } = Input;
 
-function SearchBar(props) {
+function SearchBar({onSearch}) {
 
-        const [value, setValue] = useState('')
-        const valueChangeHandler = e => setValue(e.target.value)
+    const [value, setValue] = useState('')
+    const valueChangeHandler = e => setValue(e.target.value)
 
     return (
         <Fragment>
-                <div className="level-left">
-                    <input 
-                    className="level-item input is-primary" 
-                    type="text" 
-                    placeholder="Поиск"
-                    onChange={valueChangeHandler} 
-                    value={value}
-                    />
-                    <button 
-                    onClick={() => props.onSearch(value)}
-                    className="level-item button is-primary">найти</button>
-                </div>
+            <Search
+                style={{ marginTop: '1rem' }}
+                placeholder="Введите имя фамилию или email"
+                enterButton="Поиск"
+                size="default"
+                onChange={valueChangeHandler}
+                onSearch={value => onSearch(value)}
+                />
         </Fragment>
     )
-    
 }
 
 export default SearchBar
