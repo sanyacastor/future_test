@@ -1,0 +1,16 @@
+.users {
+  width: 100%;
+}
+
+.users__item {
+  padding: 1em 0;
+}
+
+.users__row {
+  cursor: pointer;
+}
+
+.users__row:hover {
+  background-color: #1890ff;
+  color: white;
+}

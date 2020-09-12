@@ -1,141 +1,136 @@
-import React,  { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+
+import AddUser from './Components/AddUser';
+import CustomHeader from './Components/Header';
+import WelcomeSceen from './Components/WelcomeScreen';
 import UserList from './Components/UserList';
-import ActiveUser from './Components/ActiveUser';
-import SearchBar from './Components/SearchBar';
-import AddUser from "./Components/AddUser";
-import WelcomeSceen from "./Components/WelcomeScreen";
-import Pagination from "./Components/Pagination";
-import Loader from "./Components/Loader";
+import UserCard from './Components/UserCard';
+import Pagination from './Components/Pagination';
 
-import './App.css'
+import { Layout, notification, Row, Col } from 'antd';
+import { getUsers } from './servicies/usersApi';
+
 import 'antd/dist/antd.css';
-import { Layout, Menu, notification } from 'antd';
-const { Header, Content, Footer } = Layout;
 
+const { Content, Footer } = Layout;
 
 function App() {
-
-  const [users, setUsers] = useState([])
-  const [search, setSearch] = useState('')
-  const [searchResult, setSearchResult] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [welcomeScreen, setWelcomeScreen] = useState(true)
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState('');
+  const [searchResult, setSearchResult] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [welcomeScreen, setWelcomeScreen] = useState(true);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1)
-  
-  const loadData = (url) => {
-    setError(null)
-    setLoading(true)
-    setWelcomeScreen(false)
+  const [totalPages, setTotalPages] = useState(1);
 
-    fetch(url)
-    .then(response => {
-            if(response.ok) {
-                return response.json()
-            } else {
-                throw new Error ('Что-то пошло не так');
-            }
-        })
-        .then(data => { setUsers(data)
-                        setLoading(false)
-          }) 
-        .catch(error => {setError('Ошибка загрузки данных')
-                        setLoading(false)
-                        setWelcomeScreen(true)
-                        });
+  const loadData = async (url) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const data = await getUsers(url);
+      setUsers(data);
+      setLoading(false);
+      setWelcomeScreen(false);
+    } catch (error) {
+      setLoading(false);
+      setError(error.message);
     }
-    
-  const usersPerPage = 50
-  const indexOfLastUsers = currentPage * usersPerPage
-  const IndexOfFirstUsers = indexOfLastUsers - usersPerPage
+  };
+
+  const usersPerPage = 50;
+  const indexOfLastUsers = currentPage * usersPerPage;
+  const IndexOfFirstUsers = indexOfLastUsers - usersPerPage;
 
   useEffect(() => {
-  
-    const result = users.concat().filter(item => {
-      return item['firstName'].toLowerCase().includes(search.toLowerCase())
-          || item['lastName'].toLowerCase().includes(search.toLowerCase())
-          || item['email'].toLowerCase().includes(search.toLowerCase()) 
-      })
+    const result = users.concat().filter((user) => {
+      return (
+        user['firstName'].toLowerCase().includes(search.toLowerCase()) ||
+        user['lastName'].toLowerCase().includes(search.toLowerCase()) ||
+        user['email'].toLowerCase().includes(search.toLowerCase())
+      );
+    });
 
-    setTotalPages(Math.floor(result.length/usersPerPage))
-    const displayUsers =  result.slice(IndexOfFirstUsers, indexOfLastUsers)
+    setTotalPages(Math.floor(result.length / usersPerPage));
+    const displayUsers = result.slice(IndexOfFirstUsers, indexOfLastUsers);
 
     setSearchResult(displayUsers);
-  }, [IndexOfFirstUsers, currentPage, indexOfLastUsers, search, searchResult.length, users]);
+  }, [
+    IndexOfFirstUsers,
+    currentPage,
+    indexOfLastUsers,
+    search,
+    searchResult.length,
+    users,
+  ]);
 
-  useEffect(()=>{
-    if(error){
-      openNotificationWithIcon('error', error)
+  useEffect(() => {
+    if (error) {
+      openNotificationWithIcon('error', error);
     }
-  },[error])
-
+  }, [error]);
 
   const userClickHandler = (id) => {
-    users.forEach(el => {
-      if(parseInt(el.id) === parseInt(id)) {
-        setCurrentUser(el)
+    users.forEach((el) => {
+      if (parseInt(el.id) === parseInt(id)) {
+        setCurrentUser(el);
       }
     });
-  }
+  };
 
-  const searchHandler = search => {
-    setSearch(search)
-    setCurrentPage(1)
-  }
+  const searchHandler = (search) => {
+    setSearch(search);
+    setCurrentPage(1);
+  };
 
   const addUser = (user) => {
-    setUsers([user, ...users])
-    openNotificationWithIcon('success',`${user.firstName} добавлен`)
-  }
+    setUsers([user, ...users]);
+    openNotificationWithIcon('success', `${user.firstName} добавлен`);
+  };
 
   const openNotificationWithIcon = (type, text) => {
-        notification[type]({
-            message: text,
-        });
-    };
-  
+    notification[type]({
+      message: text,
+    });
+  };
+
   const paginate = (pageNumber) => {
-    setCurrentPage(pageNumber)
-  } 
-  
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <div className="App">
-      <Layout>
-      {welcomeScreen ? 
-        <WelcomeSceen onClick={loadData}/>
-        :<React.Fragment>
-          <Header style={{ position: 'fixed', zIndex: 1, width: '100%' }}>
-            <Menu
-              theme="dark"
-              mode="horizontal"
-              defaultSelectedKeys={['2']}
-              style={{ lineHeight: '64px' }}
-            >
-            <SearchBar onSearch = {searchHandler}/>
-            </Menu>
-          </Header>
-          <Content style={{ padding: '0 50px', marginTop: 64 }}>
-          <AddUser addUser={addUser}/>
-            { loading ?
-            <Loader/>
-            :<UserList
-            data = {searchResult}
-            clickHandler={userClickHandler}/>
-            }
-            { searchResult.length >= usersPerPage ?
-            <Pagination 
-            total={totalPages}
-            paginate={paginate}
-            currentPage={currentPage}/>
-            : null
-            }
-            <ActiveUser user={currentUser}/>
+      <Layout style={{ minHeight: '100vh' }}>
+        {welcomeScreen ? (
+          <Content>
+            <WelcomeSceen apiUrl={loadData} onLoading={loading} />
           </Content>
+        ) : (
+          <>
+            <CustomHeader searchHandler={searchHandler} />
+            <Content>
+              <Row>
+                <Col span={14} offset={5}>
+                  <AddUser addUser={addUser} />
+                
+              <UserList data={searchResult} clickHandler={userClickHandler} />
+              <Pagination
+                total={totalPages}
+                paginate={paginate}
+                currentPage={currentPage}
+                listLength={searchResult.length}
+                itemsPerPage={usersPerPage}
+              />
+
+              <UserCard user={currentUser} />
+              </Col>
+              </Row>
+            </Content>
+          </>
+        )}
         <Footer style={{ textAlign: 'center' }}>Created by Sanya</Footer>
-          </React.Fragment>
-      }
       </Layout>
     </div>
   );
